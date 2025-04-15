@@ -1,24 +1,25 @@
 import tkinter as tk
 from tkinter import messagebox
+from datetime import datetime
 
-# Base window
 root = tk.Tk()
 root.title("Institution Admin Panel")
 root.geometry("800x500")
-root.config(bg="#2C3E50")  # Dark slate background
+root.config(bg="#1E1E1E")
 
 current_frame = None
 
-# === New Dark Color Palette ===
-SIDEBAR_BG = "#2C3E50"      # Dark slate
-MAIN_BG = "#34495E"         # Charcoal gray
-HEADER_COLOR = "#F39C12"    # Orange headers
-BUTTON_BG = "#1A1A1A"       # Dark buttons
-BUTTON_FG = "#000000"       # Dark text
-ENTRY_BG = "#1A1A1A"        # Dark entry background
-ENTRY_FG = "#F7F9FB"        # Light entry text
-ERROR_COLOR = "#E74C3C"     # Red
-SUCCESS_COLOR = "#2ECC71"   # Green for save button
+SIDEBAR_BG = "#2E8B57"
+MAIN_BG = "#2B2B2B"
+HEADER_COLOR = "#F5C45E"
+BUTTON_BG = "#444444"
+BUTTON_FG = "#000000"
+ENTRY_BG = "#333333"
+ENTRY_FG = "#FFFFFF"
+ERROR_COLOR = "#BE3D2A"
+SUCCESS_COLOR = "#3CB371"
+SIDEBAR_WIDTH = 350
+
 
 def switch_frame(frame_func):
     global current_frame
@@ -27,20 +28,23 @@ def switch_frame(frame_func):
     current_frame = frame_func()
     current_frame.pack(fill="both", expand=True)
 
-# === Login Screen ===
+
 def login_screen():
     frame = tk.Frame(root, bg=MAIN_BG)
 
-    logo = tk.Label(frame, text="[LOGO]", font=("Arial", 14), bg=SIDEBAR_BG, fg="white", width=20, height=10)
+    inner_frame = tk.Frame(frame, bg=MAIN_BG)
+    inner_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+    logo = tk.Label(inner_frame, text="[LOGO]", font=("Arial", 14), bg=SIDEBAR_BG, fg="white", width=20, height=10)
     logo.grid(row=0, column=0, rowspan=4, padx=20, pady=20)
 
-    tk.Label(frame, text="Admin", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).grid(row=0, column=1, pady=(30, 10))
-    tk.Label(frame, text="Username", bg=MAIN_BG, fg="white").grid(row=1, column=1)
-    username_entry = tk.Entry(frame, bg=ENTRY_BG, fg=ENTRY_FG)
+    tk.Label(inner_frame, text="Admin", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).grid(row=0, column=1, pady=(30, 10))
+    tk.Label(inner_frame, text="Username", bg=MAIN_BG, fg="white").grid(row=1, column=1)
+    username_entry = tk.Entry(inner_frame, bg=ENTRY_BG, fg=ENTRY_FG)
     username_entry.grid(row=1, column=2)
 
-    tk.Label(frame, text="Password", bg=MAIN_BG, fg="white").grid(row=2, column=1)
-    password_entry = tk.Entry(frame, show="*", bg=ENTRY_BG, fg=ENTRY_FG)
+    tk.Label(inner_frame, text="Password", bg=MAIN_BG, fg="white").grid(row=2, column=1)
+    password_entry = tk.Entry(inner_frame, show="*", bg=ENTRY_BG, fg=ENTRY_FG)
     password_entry.grid(row=2, column=2)
 
     def login():
@@ -49,15 +53,15 @@ def login_screen():
         else:
             messagebox.showerror("Login Failed", "Invalid credentials")
 
-    tk.Button(frame, text="Log In", command=login, bg=BUTTON_BG, fg=BUTTON_FG).grid(row=3, column=1, columnspan=2, pady=10)
+    tk.Button(inner_frame, text="Log In", command=login, bg=BUTTON_BG, fg=BUTTON_FG).grid(row=3, column=1, columnspan=2, pady=10)
 
     return frame
 
-# === Admin Dashboard ===
+
 def admin_dashboard():
     frame = tk.Frame(root, bg=MAIN_BG)
 
-    sidebar = tk.Frame(frame, width=150, bg=SIDEBAR_BG)
+    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
     sidebar.pack(side="left", fill="y")
 
     logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
@@ -69,17 +73,26 @@ def admin_dashboard():
     main_area = tk.Frame(frame, bg=MAIN_BG)
     main_area.pack(fill="both", expand=True)
 
+    date_label = tk.Label(
+        main_area,
+        text=datetime.now().strftime("%A, %Y-%m-%d"),
+        bg=MAIN_BG,
+        fg="white",
+        font=("Arial", 10)
+    )
+    date_label.pack(anchor="ne", padx=10, pady=5)
+
     tk.Label(main_area, text="Admin Profile", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).pack(pady=10)
     tk.Label(main_area, text="Admin Thapa", font=("Arial", 14), bg=MAIN_BG, fg="white").pack(pady=10)
     tk.Button(main_area, text="Log Out", command=lambda: switch_frame(login_screen), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=5)
 
     return frame
 
-# === Add User Screen ===
+
 def add_user_screen():
     frame = tk.Frame(root, bg=MAIN_BG)
 
-    sidebar = tk.Frame(frame, width=250, bg=SIDEBAR_BG)
+    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
     sidebar.pack(side="left", fill="y")
 
     logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
@@ -95,7 +108,7 @@ def add_user_screen():
 
     tk.Label(main_area, text="Add User", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).grid(row=0, column=0, columnspan=4, pady=10)
 
-    fields = ["ID", "Name", "DOB", "Address", "Grade", "Section", "Username", "Password"]
+    fields = ["ID", "Name", "DOB", "Address", "Grade", "Section"]
     entries = {}
 
     for i, field in enumerate(fields):
@@ -109,15 +122,15 @@ def add_user_screen():
         print("Saving user:", user_data)
         messagebox.showinfo("Saved", "User added successfully")
 
-    tk.Button(main_area, text="Save", command=save_user, bg=SUCCESS_COLOR, fg=BUTTON_FG).grid(row=5, column=1, pady=20)
+    tk.Button(main_area, text="Save", command=save_user, bg=SUCCESS_COLOR, fg=BUTTON_FG).grid(row=5, column=0, columnspan=4, pady=20)
 
     return frame
 
-# === Delete User Screen ===
+
 def delete_user_screen():
     frame = tk.Frame(root, bg=MAIN_BG)
 
-    sidebar = tk.Frame(frame, width=150, bg=SIDEBAR_BG)
+    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
     sidebar.pack(side="left", fill="y")
 
     logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
@@ -145,10 +158,10 @@ def delete_user_screen():
         else:
             messagebox.showwarning("Error", "Please enter an ID.")
 
-    tk.Button(main_area, text="Delete", command=delete_user, bg=ERROR_COLOR, fg="white").pack()
+    tk.Button(main_area, text="Delete", command=delete_user, bg=ERROR_COLOR, fg=BUTTON_FG).pack()
 
     return frame
 
-# Start the app
+
 switch_frame(login_screen)
 root.mainloop()
