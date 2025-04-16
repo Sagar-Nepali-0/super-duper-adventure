@@ -1,190 +1,347 @@
 import tkinter as tk
-from PIL import Image, ImageTk # To handle image files easily
+from PIL import Image, ImageTk
 from tkinter import messagebox
 from datetime import datetime
 import pandas as pd
-root = tk.Tk()
-root.title("Institution Admin Panel")
-# Center the window on the screen
-window_width = 800
-window_height = 500
 
-# Get the screen width and height
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
-
-# Calculate the position to center the window
-x_position = (screen_width // 2) - (window_width // 2)
-y_position = (screen_height // 2) - (window_height // 2)
-
-# Set the geometry of the window
-root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 PASSWORD_FILE = "data/password.csv"
-authentication = pd.read_csv(PASSWORD_FILE)
-current_frame = None
-
-SIDEBAR_BG = "#828080"
-MAIN_BG = "#D9D9D9"
-HEADER_COLOR = "#F5C45E"
-BUTTON_BG = "#D9D9D9"
-BUTTON_FG = "#000000"
-ENTRY_BG = "#FFFFFF"
-ENTRY_FG = "#000000"
-ERROR_COLOR = "#BE3D2A"
-SUCCESS_COLOR = "#3CB371"
-TEXT_COLOR = "#000000"  
-SIDEBAR_WIDTH = 350
+try:
+    authentication = pd.read_csv(PASSWORD_FILE)
+    image_path = "img/logo.png"
+except FileNotFoundError:
+    authentication = pd.DataFrame(columns=["ID", "username", "password", "role"])
 
 
-def switch_frame(frame_func):
-    global current_frame
-    if current_frame is not None:
-        current_frame.destroy()
-    current_frame = frame_func()
-    current_frame.pack(fill="both", expand=True)
+class MainWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Log In")
+        self.icon = tk.PhotoImage(file=image_path)  # Ensure the image is in the same directory or provide a full path
+        self.root.iconphoto(True, self.icon)
+
+        # Center the window on the screen
+        window_width = 800
+        window_height = 500
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x_position = (screen_width // 2) - (window_width // 2)
+        y_position = (screen_height // 2) - (window_height // 2)
+        self.root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
+
+        # Shared properties
+        self.current_frame = None
+        self.SIDEBAR_BG = "#828080"
+        self.MAIN_BG = "#D9D9D9"
+        self.HEADER_COLOR = "#828080"
+        self.BUTTON_BG = "#D9D9D9"
+        self.BUTTON_FG = "#000000"
+        self.ENTRY_BG = "#FFFFFF"
+        self.ENTRY_FG = "#000000"
+        self.ERROR_COLOR = "#BE3D2A"
+        self.SUCCESS_COLOR = "#3CB371"
+        self.TEXT_COLOR = "#000000"
+        self.SIDEBAR_WIDTH = 350
+
+    def switch_frame(self, frame_class, *args):
+        """Destroy the current frame and replace it with a new one."""
+        if self.current_frame is not None:
+            self.current_frame.destroy()
+        self.current_frame = frame_class(self, *args)
+        self.current_frame.pack(fill="both", expand=True)
 
 
-def login_screen():
-    canvas = tk.Canvas(root, width=800, height=500, bg="white")
-    # Draw a rectangle on the canvas
-    rectangle = canvas.create_rectangle(100, 80, 700, 400, fill="#828080", outline="black", width=1)
-    # Calculate the x-coordinate of the center
-    x_center = (100 + 700) // 2  # Average of the left and right x-coordinates
-    # Draw a vertical line at the center
-    canvas.create_line(x_center, 80, x_center, 400, fill="black", width=2)
+class LoginScreen(tk.Frame):
+    def __init__(self, parent, main_window):
+        super().__init__(parent.root, bg=main_window.MAIN_BG)
 
-    # Admin label
-    canvas.create_text(550, 150, text="Admin", fill="black", font=("Arial", 29, "bold"))
+        canvas = tk.Canvas(self, width=800, height=500, bg="white")
+        canvas.pack( expand=True)
+        # a rectangle is created and divided into two parts
+        canvas.create_rectangle(100, 80, 700, 400, fill=main_window.SIDEBAR_BG, outline="black", width=1)
+        x_center = (100 + 700) // 2  # Center of the rectangle
+        canvas.create_line(x_center, 80, x_center, 400, fill="black", width=2) # Vertical line
 
-    # Username label and entry
-    canvas.create_text(465, 200, text="Username:", fill="black", font=("Arial", 14))
-    username_entry = tk.Entry(root, width=15, font=("Arial", 14))
-    canvas.create_window(600, 200, window=username_entry)  # Position the entry box next to the label
+        # Admin label
+        canvas.create_text(550, 150, text="Admin", fill="black", font=("Arial", 29, "bold"))
 
-    # Password label and entry
-    canvas.create_text(465, 250, text="Password:", fill="black", font=("Arial", 14))
-    password_entry = tk.Entry(root, width=15, show="*", font=("Arial", 14))
-    canvas.create_window(600, 250, window=password_entry)
+        # Username label and entry
+        canvas.create_text(465, 200, text="Username:", fill="black", font=("Arial", 14))
+        username_entry = tk.Entry(self, width=15, font=("Arial", 14))
+        canvas.create_window(600, 200, window=username_entry)
 
-    # Load and display the image
-    image_path = "img/logo.png"  # Replace with your image file path
-    image = Image.open(image_path)  # Open the image file
-    resized_image = image.resize((295, 295))  # Resize the image if needed
-    image_tk = ImageTk.PhotoImage(resized_image)  # Convert the image for tkinter
-    canvas.image_tk = image_tk 
-    canvas.create_image(250, 240, image=image_tk, anchor="center")
+        # Password label and entry
+        canvas.create_text(465, 250, text="Password:", fill="black", font=("Arial", 14))
+        password_entry = tk.Entry(self, width=15, show="*", font=("Arial", 14))
+        canvas.create_window(600, 250, window=password_entry)
 
+        # Load and display the image
+        image = Image.open(image_path)  # Load the image using PIL
+        resized_image = image.resize((295, 295))  # Resize the image if needed
+        image_tk = ImageTk.PhotoImage(resized_image)  # Convert the image for tkinter
+        canvas.image_tk = image_tk 
+        canvas.create_image(250, 240, image=image_tk, anchor="center")
 
-    def login():
+        # Login button
+        def login():
+            username = username_entry.get()
+            password = password_entry.get()
 
-        username = username_entry.get()
-        password = password_entry.get()
+            # Filter the DataFrame to find the matching username and password
+            user = authentication[
+                (authentication["username"] == username) & (authentication["password"] == password)
+            ]
 
-        # Filter the DataFrame to find the matching username and password
-        user = authentication[
-            (authentication["username"] == username) & (authentication["password"] == password)
-        ]
-
-        if not user.empty:  # Check if a matching user exists
-
-            if user.iloc[0]["role"] == "student":  # Access the role of the first matching user
-                messagebox.showerror("Login Failed", "Student cannot log in as admin")
+            if not user.empty:  # Check if a matching user exists
+                if user.iloc[0]["role"] == "student":  # Access the role of the first matching user
+                    messagebox.showerror("Login Failed", "Student cannot log in as admin")
+                else:
+                    logged_in_username = user.iloc[0]["username"]
+                    main_window.switch_frame(AdminDashboard, logged_in_username)
             else:
-                logged_in_username = user.iloc[0]["username"]
-                switch_frame(lambda: admin_dashboard(logged_in_username))
-        else:
-            messagebox.showerror("Login Failed", "Invalid credentials")
-            
+                messagebox.showerror("Login Failed", "Invalid credentials")
 
-    button = tk.Button(root, text="Log In", width=26, command=login, font=("Arial", 12, "bold"))
-    canvas.create_window(552, 300, window=button)  # Center the button below the input fields
-    return canvas
+        login_button = tk.Button(self, text="Log In", width=26, command=login, font=("Arial", 12, "bold"))
+        canvas.create_window(552, 300, window=login_button)
 
 
-def admin_dashboard(logged_in_username):
+class AdminDashboard(tk.Frame):  # Inherit directly from tk.Frame
+    def __init__(self, parent, username):
+        super().__init__(parent.root, bg=parent.MAIN_BG)  # Properly initialize as a tk.Frame
+        self.parent = parent
+        self.username = username
+        self.pack(fill="both", expand=True)
+        self.root = parent.root
+        self.root.title("Admin Dashboard")
 
-    frame = tk.Frame(root, bg=MAIN_BG)
+        # Create a sidebar with a fixed width
+        sidebar_width = 200
+        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
 
-    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
-    sidebar.pack(side="left", fill="y")
+        # Add a right border to the sidebar
+        right_border = tk.Frame(sidebar, bg="black", width=2)  # Black border with 2px width
+        right_border.pack(side="right", fill="y")
 
-    logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
-    logo.pack(pady=10)
+        # Create a date header
+        date_header = tk.Frame(self, height=50)
+        date_header.pack(side="top", fill="x")
 
-    tk.Button(sidebar, text="Add User", command=lambda: switch_frame(lambda: add_user_screen(logged_in_username)), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=10)
-    tk.Button(sidebar, text="Delete User", command=lambda: switch_frame(lambda: delete_user_screen(logged_in_username)), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=10)
+        current_date = datetime.now().strftime("%A, %Y-%m-%d")
+        date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
+        date_label.pack(side="right", padx=10, pady=5)
 
-    main_area = tk.Frame(frame, bg=MAIN_BG)
-    main_area.pack(fill="both", expand=True)
+        # Create a header
+        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        header.pack(side="top", fill="x")
 
-    date_label = tk.Label(
-        main_area,
-        text=datetime.now().strftime("%A, %Y-%m-%d"),
-        bg=MAIN_BG,
-        fg="white",
-        font=("Arial", 10)
-    )
-    date_label.pack(anchor="ne", padx=10, pady=5)
+        # Header label
+        header_label = tk.Label(header, text="Admin Dashboard", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
+        header_label.pack(pady=10, side="left")
 
-    tk.Label(main_area, text="Admin Profile", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).pack(pady=10)
-    tk.Label(main_area, text=logged_in_username, font=("Arial", 14), bg=MAIN_BG, fg="white").pack(pady=10)
-    tk.Button(main_area, text="Log Out", command=lambda: switch_frame(login_screen), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=5)
+        # Log Out button
+        header_logout = tk.Button(header, text="Log Out", command=lambda: parent.switch_frame(LoginScreen, parent), font=("Arial", 13, "bold"))
+        header_logout.pack(pady=10, padx=10, side="right")
 
-    return frame
+        #text
+        welcome_label = tk.Label(self, text=f"Welcome, {username}!", font=("Arial", 18, "bold"), bg=parent.MAIN_BG, fg="black")
+        welcome_label.pack(pady=10)
+        # how to use this software details
+        details_label = tk.Label(self, text="This software is designed for managing student and admin accounts.", font=("Arial", 14), bg=parent.MAIN_BG, fg="black")
+        details_label.pack(pady=10)
+
+        # Divide the sidebar into two sections: upper and lower
+        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        upper_section.pack(fill="x", pady=(20, 10))
+
+        # Add a horizontal line to divide the sections
+        divider = tk.Frame(sidebar, bg="black", height=2)
+        divider.pack(fill="x", pady=5)
+
+        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section.pack(fill="x", pady=(10, 20), expand=True)
+
+        # Load and display the image in the upper section
+        try:
+            image = Image.open(image_path)
+            resized_image = image.resize((120, 120))
+            image_tk = ImageTk.PhotoImage(resized_image)
+            self.sidebar_image = image_tk
+            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
+            image_label.pack(pady=10)
+        except FileNotFoundError:
+            messagebox.showerror("Error", f"Image file not found: {image_path}")
+
+        # Add buttons to the lower section
+
+        add_user_button = tk.Button(
+            lower_section,
+            text="Add User",
+            command=lambda: parent.switch_frame(AddUser, self.username),  # Switch to AddUser frame
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15
+        )
+        add_user_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
 
 
-def add_user_screen(logged_in_username):
-    frame = tk.Frame(root, bg=MAIN_BG)
+        delete_user_button = tk.Button(
+            lower_section,
+            text="Delete User",
+            command=lambda: parent.switch_frame(DeleteUser, self.username),  # Pass only the required arguments
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15,
+        )
+        delete_user_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
 
-    # Sidebar
-    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
-    sidebar.pack(side="left", fill="y")
+class AddUser(tk.Frame):
+    def __init__(self, parent, username):
+        super().__init__(parent.root, bg=parent.MAIN_BG)
+        self.parent = parent
+        self.username = username
+        self.pack(fill="both", expand=True)
+        self.root = parent.root
+        self.root.title("Add User")
 
-    logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
-    logo.pack(pady=10)
+        # Create a sidebar with a fixed width
+        sidebar_width = 200
+        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
 
-    tk.Label(sidebar, text="Role", bg=SIDEBAR_BG, fg="white", font=("Arial", 12)).pack(pady=(10, 0))
-    tk.Button(sidebar, text="Admin", command=lambda: load_fields("admin"), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=5)
-    tk.Button(sidebar, text="Student", command=lambda: load_fields("student"), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=5)
-    tk.Button(sidebar, text="← Back", command=lambda: switch_frame(lambda: admin_dashboard(logged_in_username)), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=20)
+        # Add a right border to the sidebar
+        right_border = tk.Frame(sidebar, bg="black", width=2)
+        right_border.pack(side="right", fill="y")
 
-    # Main Area
-    global main_area
-    main_area = tk.Frame(frame, bg=MAIN_BG)
-    main_area.pack(fill="both", expand=True, padx=20, pady=20)
+        # Create a date header
+        date_header = tk.Frame(self, height=50)
+        date_header.pack(side="top", fill="x")
 
-    # Default content
-    tk.Label(main_area, text="Select a role to add a user", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).pack(pady=10)
+        current_date = datetime.now().strftime("%A, %Y-%m-%d")
+        date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
+        date_label.pack(side="right", padx=10, pady=5)
 
-    return frame
+        # Create a header
+        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        header.pack(side="top", fill="x")
 
-def load_fields(role):
-    # Clear the current content in main_area
-    for widget in main_area.winfo_children():
-        widget.destroy()
+        # Header label
+        header_label = tk.Label(header, text="Add User", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
+        header_label.pack(pady=10, side="left")
 
-    # Define fields for admin and student
-    admin_fields = ["ID", "Name", "Username", "Password"]
-    student_fields = ["ID", "Name", "DOB", "Address", "Grade", "Section", "Username", "Password"]
+        # Divide the sidebar into two sections: upper and lower
+        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        upper_section.pack(fill="x", pady=(20, 10))
 
-    # Select fields based on role
-    fields = admin_fields if role == "admin" else student_fields
+        # Add a horizontal line to divide the sections
+        divider = tk.Frame(sidebar, bg="black", height=2)
+        divider.pack(fill="x", pady=5)
 
-    # Add a title
-    tk.Label(main_area, text=f"Add {role.capitalize()} User", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).grid(row=0, column=0, columnspan=4, pady=10)
+        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section.pack(fill="x", pady=(10, 20), expand=True)
 
-    # Create entry fields dynamically
-    entries = {}
-    for i, field in enumerate(fields):
-        tk.Label(main_area, text=field, bg=MAIN_BG, fg="white").grid(row=1 + i // 2, column=(i % 2) * 2, padx=10, pady=5)
-        entry = tk.Entry(main_area, bg=ENTRY_BG, fg=ENTRY_FG)
-        entry.grid(row=1 + i // 2, column=(i % 2) * 2 + 1, padx=10, pady=5)
-        entries[field] = entry
+        # Load and display the image in the upper section
+        try:
+            image = Image.open(image_path)
+            resized_image = image.resize((120, 120))
+            image_tk = ImageTk.PhotoImage(resized_image)
+            self.sidebar_image = image_tk
+            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
+            image_label.pack(pady=10)
+        except FileNotFoundError:
+            messagebox.showerror("Error", f"Image file not found: {image_path}")
 
-    # Save button
-    def save_user():
+        # Sidebar content
+        add_user_admin = tk.Button(
+            lower_section,
+            text="Admin",
+            command=lambda: self.load_fields("admin"),  # Switch to AddUser frame
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15
+        )
+        add_user_admin.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
+
+
+        add_user_student = tk.Button(
+            lower_section,
+            text="Student",
+            command=lambda: self.load_fields("student"),  # Pass only the required arguments
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15,
+        )
+        add_user_student.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
+
+        back_btn = tk.Button(
+            lower_section,
+            text="Back",
+            command=lambda: parent.switch_frame(AdminDashboard, self.username),  # Pass only the required arguments
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15,
+        )
+        back_btn.pack(pady=(5, 5), anchor="n")
+
+        # Main area
+        self.main_area = tk.Frame(self, bg=parent.MAIN_BG)
+        self.main_area.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Default content
+        tk.Label(self.main_area, text="Select a role to add a user", font=("Arial", 18, "bold"), bg=parent.MAIN_BG, fg=parent.HEADER_COLOR).pack(pady=10)
+
+    def load_fields(self, role):
+        # Clear the current content in main_area
+        for widget in self.main_area.winfo_children():
+            widget.destroy()
+
+        # Define fields for admin and student
+        admin_fields = ["ID", "Name", "Username", "Password"]
+        student_fields = ["ID", "Name", "DOB", "Address", "Grade", "Section", "Username", "Password"]
+
+        # Select fields based on role
+        fields = admin_fields if role == "admin" else student_fields
+
+        # Add a title
+        tk.Label(
+            self.main_area,
+            text=f"Add {role.capitalize()} User",
+            font=("Arial", 18, "bold"),
+            bg=self.parent.MAIN_BG,
+            fg="black"
+        ).grid(row=0, column=0, columnspan=2, pady=10, sticky="w", padx=20)  # Aligned to the left with padx
+
+        # Create entry fields dynamically
+        self.entries = {}
+        for i, field in enumerate(fields):
+            tk.Label(
+                self.main_area,
+                text=field,
+                bg=self.parent.MAIN_BG,
+                fg="black"
+            ).grid(row=1 + i, column=0, padx=(20, 10), pady=5, sticky="w")  # Aligned to the left with padx
+            entry = tk.Entry(self.main_area, bg=self.parent.ENTRY_BG, fg=self.parent.ENTRY_FG)
+            entry.grid(row=1 + i, column=1, padx=(10, 20), pady=5, sticky="w")  # Aligned to the left with padx
+            self.entries[field] = entry
+
+        # Save button
+        tk.Button(
+            self.main_area,
+            text="Save",
+            command=lambda: self.save_user(role),
+            bg="#D9D9D9",
+            fg=self.parent.BUTTON_FG
+        ).grid(row=len(fields) + 1, column=0, columnspan=2, pady=20, padx=20, sticky="w")  # Aligned to the left
+
+    def save_user(self, role):
         # Collect user data from the entries
-        user_data = {field: entry.get() for field, entry in entries.items()}
+        user_data = {field: entry.get() for field, entry in self.entries.items()}
 
         # Check for empty fields
         if not all(user_data.get(field) for field in ["ID", "Username", "Password"]):
@@ -225,66 +382,109 @@ def load_fields(role):
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save user: {e}")
 
-    tk.Button(main_area, text="Save", command=save_user, bg=SUCCESS_COLOR, fg=BUTTON_FG).grid(
-        row=len(fields) + 1, column=0, columnspan=2, pady=20
-    )
+class DeleteUser(tk.Frame):
+    def __init__(self, parent, username):
+        super().__init__(parent.root, bg=parent.MAIN_BG)
+        self.parent = parent
+        self.username = username
+        self.pack(fill="both", expand=True)
+        self.root = parent.root
+        self.root.title("Delete User")
 
+        # Create a sidebar with a fixed width
+        sidebar_width = 200
+        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
 
-def delete_user_screen(logged_in_username):
-    frame = tk.Frame(root, bg=MAIN_BG)
+        # Add a right border to the sidebar
+        right_border = tk.Frame(sidebar, bg="black", width=2)
+        right_border.pack(side="right", fill="y")
 
-    sidebar = tk.Frame(frame, width=SIDEBAR_WIDTH, bg=SIDEBAR_BG)
-    sidebar.pack(side="left", fill="y")
+        # Create a date header
+        date_header = tk.Frame(self, height=50)
+        date_header.pack(side="top", fill="x")
 
-    logo = tk.Label(sidebar, text="[LOGO]", bg=SIDEBAR_BG, fg="white", height=5)
-    logo.pack(pady=10)
+        current_date = datetime.now().strftime("%A, %Y-%m-%d")
+        date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
+        date_label.pack(side="right", padx=10, pady=5)
 
-    # Back Button
-    tk.Button(sidebar, text="← Back", command=lambda: switch_frame(lambda: admin_dashboard(logged_in_username)), bg=BUTTON_BG, fg=BUTTON_FG).pack(pady=20)
+        # Divide the sidebar into two sections: upper and lower
+        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        upper_section.pack(fill="x", pady=(20, 10))
 
-    main_area = tk.Frame(frame, bg=MAIN_BG)
-    main_area.pack(fill="both", expand=True, padx=20, pady=20)
+        # Add a horizontal line to divide the sections
+        divider = tk.Frame(sidebar, bg="black", height=2)
+        divider.pack(fill="x", pady=5)
 
-    tk.Label(main_area, text="Delete User", font=("Arial", 18, "bold"), bg=MAIN_BG, fg=HEADER_COLOR).pack(pady=10)
+        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section.pack(fill="x", pady=(10, 20), expand=True)
 
-    form_frame = tk.Frame(main_area, bg=MAIN_BG)
-    form_frame.pack(pady=20)
+        # Load and display the image in the upper section
+        try:
+            image = Image.open(image_path)
+            resized_image = image.resize((120, 120))
+            image_tk = ImageTk.PhotoImage(resized_image)
+            self.sidebar_image = image_tk
+            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
+            image_label.pack(pady=10)
+        except FileNotFoundError:
+            messagebox.showerror("Error", f"Image file not found: {image_path}")
 
-    tk.Label(form_frame, text="ID", bg=MAIN_BG, fg="white").grid(row=0, column=0, padx=10)
-    id_entry = tk.Entry(form_frame, bg=ENTRY_BG, fg=ENTRY_FG)
-    id_entry.grid(row=0, column=1, padx=10)
+        # Add buttons to the lower section
+        back_button = tk.Button(lower_section, text="Back", command=lambda: parent.switch_frame(AdminDashboard, username),
+                                bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 10, "bold"), width=15)
+        back_button.pack(pady=(5, 5), anchor="n")
 
-    def delete_user():
-        user_id = id_entry.get()
+        # Create a header
+        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        header.pack(side="top", fill="x")
 
+        # Header label
+        header_label = tk.Label(header, text="Delete User", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
+        header_label.pack(pady=10, side="left")
+
+        # Form frame for delete user functionality
+        form_frame = tk.Frame(self, bg=parent.MAIN_BG)
+        form_frame.pack(pady=50)
+
+        # User ID entry
+        tk.Label(form_frame, text="Enter User ID to Delete:", bg=parent.MAIN_BG, font=("Arial", 14)).grid(row=0, column=0, padx=10, pady=10)
+        self.user_id_entry = tk.Entry(form_frame, font=("Arial", 14))
+        self.user_id_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        # Delete button
+        delete_button = tk.Button(
+            form_frame,
+            text="Delete",
+            command=self.delete_user,
+            bg=parent.BUTTON_BG,
+            fg="black",
+            font=("Arial", 14, "bold"),
+            border= 6
+        )
+        delete_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+    def delete_user(self):
+        user_id = self.user_id_entry.get()
         if not user_id:
-            messagebox.showwarning("Error", "Please enter an ID.")
+            messagebox.showerror("Error", "Please enter a User ID.")
             return
 
         try:
-            # Load the CSV file
             df = pd.read_csv(PASSWORD_FILE)
-
-            # Check if the ID exists
             if user_id not in df["ID"].astype(str).values:
                 messagebox.showerror("Error", f"User ID {user_id} not found.")
                 return
 
-            # Remove the user with the given ID
             df = df[df["ID"].astype(str) != user_id]
-
-            # Save the updated DataFrame back to the CSV file
             df.to_csv(PASSWORD_FILE, index=False)
-
-            messagebox.showinfo("Deleted", f"User ID {user_id} deleted successfully.")
-            switch_frame(lambda: delete_user_screen(logged_in_username))  # Refresh the delete user screen
+            messagebox.showinfo("Success", f"User ID {user_id} deleted successfully.")
+            self.parent.switch_frame(DeleteUser, self.username)
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    tk.Button(main_area, text="Delete", command=delete_user, bg=ERROR_COLOR, fg=BUTTON_FG).pack()
-
-    return frame
-
-
-switch_frame(login_screen)
+root = tk.Tk()
+app = MainWindow(root)
+app.switch_frame(LoginScreen, app)
 root.mainloop()
