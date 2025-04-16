@@ -117,7 +117,8 @@ def student_dashboard():
             tk.Label(row, text=f"{subject}:", fg="black", bg=GREY_MAIN_BG, width=15, anchor="w").pack(side="left")
             tk.Label(row, text=user_data.get(subject, "N/A"), fg=GREY_ENTRY_FG, bg=GREY_MAIN_BG).pack(side="left")
 
-# okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# okkkkkkkkkkkkkkkkkkkkkkk
+# 
 
 
 
