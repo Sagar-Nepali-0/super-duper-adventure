@@ -5,7 +5,7 @@ from admin.adminGui import start_admin_gui
 from student.studentGUI import start_student_gui
 
 try:
-    image_path = "C:\PYTHON\Student\super-duper-adventure\img\logo.png"
+    image_path = "img/logo.png"
 except FileNotFoundError:
     image_path = "img/logo.png"  # Default image path
 
