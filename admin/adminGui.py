@@ -6,6 +6,8 @@ from datetime import datetime
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import os
+import sys
 
 PASSWORD_FILE = "data/password.csv"
 GRADE_DATA = "data/grade.csv"
@@ -114,6 +116,24 @@ class LoginScreen(tk.Frame):
 
         login_button = tk.Button(self, text="Log In", width=26, command=login, font=("Arial", 12, "bold"))
         canvas.create_window(552, 300, window=login_button)
+        # Modify the Back button
+        back_btn = tk.Button(
+            self,
+            text="Back",
+            command=lambda: self.back_to_login(),
+            width=26,
+            font=("Arial", 12, "bold")
+        )
+        canvas.create_window(552, 350, window=back_btn)
+
+    def back_to_login(self):
+        """Close the current window and navigate back to login.py."""
+        self.master.destroy()  # Close the current window
+        # Dynamically determine the path to login.py
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))  # Get the directory of the current script
+        login_script = os.path.join(script_dir, "login.py")  # Construct the path to login.py
+        os.system(f"python \"{login_script}\"")  # Use the constructed path to run login.py
+ 
 
 
 class AdminDashboard(tk.Frame):  # Inherit directly from tk.Frame
@@ -666,7 +686,14 @@ class StudentRecord(tk.Frame):
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
 
-root = tk.Tk()
-app = MainWindow(root)
-app.switch_frame(LoginScreen, app)
-root.mainloop()
+
+def start_admin_gui(root):
+    """Admin GUI starter function"""
+    # Clear existing widgets
+    for widget in root.winfo_children():
+        widget.destroy()
+    
+    # Initialize admin interface
+    app = MainWindow(root)
+    app.switch_frame(LoginScreen, app)
+    return app

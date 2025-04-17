@@ -3,7 +3,8 @@ from PIL import Image, ImageTk
 from tkinter import messagebox
 from datetime import datetime
 import pandas as pd
-import matplotlib.pyplot as plt
+import os
+import sys
 
 
 PASSWORD_FILE = "data/password.csv"
@@ -102,6 +103,24 @@ class LoginScreen(tk.Frame):
                             width=26, font=("Arial", 12, "bold"))
         canvas.create_window(552, 300, window=login_btn)
 
+        # Modify the Back button
+        back_btn = tk.Button(
+            self,
+            text="Back",
+            command=lambda: self.back_to_login(),
+            width=26,
+            font=("Arial", 12, "bold")
+        )
+        canvas.create_window(552, 350, window=back_btn)
+
+    def back_to_login(self):
+        """Close the current window and navigate back to login.py."""
+        self.master.destroy()  # Close the current window
+        # Dynamically determine the path to login.py
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))  # Get the directory of the current script
+        login_script = os.path.join(script_dir, "login.py")  # Construct the path to login.py
+        os.system(f"python \"{login_script}\"")  # Use the constructed path to run login.py
+ 
     def authenticate(self, main_window):
         username = self.username_entry.get()
         password = self.password_entry.get()
@@ -425,7 +444,11 @@ class ProfileUpdate(tk.Frame):
             
             
 # Initialize application
-root = tk.Tk()
-app = MainWindow(root)
-app.switch_frame(LoginScreen, app)
-root.mainloop()
+def start_student_gui(root):
+    """Use existing root window instead of creating new one"""
+    for widget in root.winfo_children():
+        widget.destroy()  # Clear existing widgets
+    app = MainWindow(root)
+    app.switch_frame(LoginScreen, app)
+    return app
+
