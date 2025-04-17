@@ -40,3 +40,41 @@ Super Duper Adventure is a Python-based GUI application for managing student and
    ```bash
    git clone https://github.com/your-username/super-duper-adventure.git
    cd super-duper-adventure
+
+2. Install the required Python libraries:
+    pip install -r requirements.txt
+
+3. Run the application:
+    python login.py
+
+## Usage
+
+1. Launch the application by running login.py.
+2. Choose either Admin or Student login.
+3. Admins can manage users and view student records.
+4. Students can log in to view and update their profiles, grades, and extracurricular activities.
+
+## Data Files
+
+data/password.csv: Stores user credentials and roles.
+data/grade.csv: Stores student grades for various subjects.
+data/eca.csv: Stores extracurricular activity enrollment data.
+data/users/admin.csv: Stores admin user details.
+data/users/student.csv: Stores student user details.
+
+## License
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Contributing
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## Acknowledgments
+<ul>
+<li>Tkinter for GUI development.</li>
+<li>Pillow for image handling.</li>
+<li>Pandas for data manipulation.</li>
+<li>Matplotlib for data visualization.</li>
+</u>
+
+
+
