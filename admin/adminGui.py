@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import os
 import sys
+import seaborn as sns
 
 PASSWORD_FILE = "data/password.csv"
 GRADE_DATA = "data/grade.csv"
@@ -66,34 +67,34 @@ class MainWindow:
 
 class LoginScreen(tk.Frame):
     def __init__(self, parent, main_window):
-        super().__init__(parent.root, bg=main_window.MAIN_BG)
+        super().__init__(parent.root, bg="black")
 
-        canvas = tk.Canvas(self, width=800, height=500, bg="white")
+        canvas = tk.Canvas(self, width=800, height=500, bg="black", highlightthickness=0)
         canvas.pack( expand=True)
         # a rectangle is created and divided into two parts
-        canvas.create_rectangle(100, 80, 700, 400, fill=main_window.SIDEBAR_BG, outline="black", width=1)
+        canvas.create_rectangle(2, 80, 800, 400, fill="black", outline="black", width=1)
         x_center = (100 + 700) // 2  # Center of the rectangle
         canvas.create_line(x_center, 80, x_center, 400, fill="black", width=2) # Vertical line
 
         # Admin label
-        canvas.create_text(550, 150, text="Admin", fill="black", font=("Arial", 29, "bold"))
+        canvas.create_text(480, 150, text="Admin", fill="white", font=("Arial", 29, "bold"))
 
         # Username label and entry
-        canvas.create_text(465, 200, text="Username:", fill="black", font=("Arial", 14))
+        canvas.create_text(465, 200, text="Username:", fill="white", font=("Arial", 14))
         username_entry = tk.Entry(self, width=15, font=("Arial", 14))
         canvas.create_window(600, 200, window=username_entry)
 
         # Password label and entry
-        canvas.create_text(465, 250, text="Password:", fill="black", font=("Arial", 14))
+        canvas.create_text(465, 250, text="Password:", fill="white", font=("Arial", 14))
         password_entry = tk.Entry(self, width=15, show="*", font=("Arial", 14))
         canvas.create_window(600, 250, window=password_entry)
 
         # Load and display the image
         image = Image.open(image_path)  # Load the image using PIL
-        resized_image = image.resize((295, 295))  # Resize the image if needed
+        resized_image = image.resize((300, 300))  # Resize the image if needed
         image_tk = ImageTk.PhotoImage(resized_image)  # Convert the image for tkinter
         canvas.image_tk = image_tk 
-        canvas.create_image(250, 240, image=image_tk, anchor="center")
+        canvas.create_image(220, 260, image=image_tk, anchor="center")
 
         # Login button
         def login():
@@ -665,21 +666,16 @@ class StudentRecord(tk.Frame):
         figure = Figure(figsize=(8, 6), dpi=100)
         ax = figure.add_subplot(111)
 
-        exams = read_gradeData.columns[1:]  # Assuming the first column is not an exam (e.g., student names or IDs)
+        # Set 'username' as index
+        read_gradeData.set_index('username', inplace=True)
 
-        # Plot grades for each student dynamically
-        for index, row in read_gradeData.iterrows():
-            student_name = row[0]  # Assuming the first column contains student names
-            grades = row[1:].tolist()  # Extract grades for the student
-            ax.plot(exams, grades, marker='o', label=student_name)  # Plot grades with the student's name as the label
+        # Plot heatmap using Seaborn
+        sns.heatmap(read_gradeData, annot=True, fmt="d", cmap="YlGnBu", linewidths=0.5, ax=ax)
 
         # Customize the chart
-        ax.set_title('Student Grades Across Exams')
-        ax.set_xlabel('Exams')
-        ax.set_ylabel('Grades')
-        ax.set_ylim(0, 100)  # Set y-axis limits to fit percentage grades
-        ax.legend()
-        ax.grid(True)
+        ax.set_title("Student Marks Heatmap", fontsize=16)
+        ax.set_xlabel("Subjects")
+        ax.set_ylabel("Students")
 
         # Embed the plot into the tkinter frame
         canvas = FigureCanvasTkAgg(figure, plot_frame)

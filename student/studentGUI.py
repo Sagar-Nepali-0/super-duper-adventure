@@ -1,36 +1,54 @@
+# ---------------------------
+# Module Imports
+# ---------------------------
 import tkinter as tk
-from PIL import Image, ImageTk
-from tkinter import messagebox
-from datetime import datetime
-import pandas as pd
+from PIL import Image, ImageTk  # For image handling
+from tkinter import messagebox  # For user feedback popups
+from datetime import datetime  # For date display
+import pandas as pd  # For CSV data handling
 import os
 import sys
 
 
-PASSWORD_FILE = "data/password.csv"
-GRADE_DATA = "data/grade.csv"
-STUDENT_FILE = "data/users/student.csv"
-ECA__FILE = "data/eca.csv"
+
+# ---------------------------
+# File Path Constants
+# ---------------------------
+PASSWORD_FILE = "data/password.csv"  # Stores user credentials
+GRADE_DATA = "data/grade.csv"       # Academic records
+STUDENT_FILE = "data/users/student.csv"  # Student profiles
+ECA_FILE = "data/eca.csv"          # Extracurricular activities
+image_path = "img/logo.png"         # Application logo
+
+# ---------------------------
+# Data Initialization
+# ---------------------------
 try:
+    # Attempt to load all data files
     authentication = pd.read_csv(PASSWORD_FILE)
     read_gradeData = pd.read_csv(GRADE_DATA)
     student_file = pd.read_csv(STUDENT_FILE)
-    eca_data = pd.read_csv(ECA__FILE)
-    image_path = "img/logo.png"
-    # Verify if the file exists
+    eca_data = pd.read_csv(ECA_FILE)
+    
+    # Verify logo exists
     with open(image_path, "rb") as f:
         pass
 except FileNotFoundError:
+    # Create empty datasets if files missing
     authentication = pd.DataFrame(columns=["ID", "username", "password", "role"])
     read_gradeData = pd.DataFrame()
     student_file = pd.DataFrame()
     eca_data = pd.DataFrame()
-    image_path = None  # Set to None if the file is not found
+    image_path = None
 
+# ---------------------------
+# Main Application Window
+# ---------------------------
 class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Student Login")
+
         self.icon = tk.PhotoImage(file=image_path)
         self.root.iconphoto(True, self.icon)
 
@@ -43,58 +61,61 @@ class MainWindow:
         y_position = (screen_height // 2) - (window_height // 2)
         self.root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 
-        # Color scheme
-        self.SIDEBAR_BG = "#2C3E50"
-        self.MAIN_BG = "#34495E"
-        self.HEADER_COLOR = "#F39C12"
-        self.BUTTON_BG = "#FFFFFF"
-        self.BUTTON_FG = "#000000"
-        self.ENTRY_BG = "#FFFFFF"
-        self.ENTRY_FG = "#000000"
-        self.TEXT_COLOR = "#FFFFFF"
+        # UI Color scheme
+        self.SIDEBAR_BG = "#2C3E50"    # Dark blue
+        self.MAIN_BG = "black"         # Primary background
+        self.HEADER_COLOR = "#F39C12"  # Orange header
+        self.BUTTON_BG = "#FFFFFF"     # White buttons
+        self.BUTTON_FG = "#000000"     # Black text
+        self.ENTRY_BG = "#FFFFFF"      # White input fields
+        self.TEXT_COLOR = "#FFFFFF"    # White text
 
-        self.current_frame = None
-        self.user_data = {}
+        self.current_frame = None     # Track active screen
+        self.user_data = {}           # Store logged-in user's data
 
     def switch_frame(self, frame_class, *args):
+        """Handle navigation between different screens"""
         if self.current_frame:
             self.current_frame.destroy()
-        print(f"Switching to frame: {frame_class.__name__}")  # Debugging
         self.current_frame = frame_class(self, *args)
         self.current_frame.pack(fill="both", expand=True)
 
+
+# ---------------------------
+# Login Screen
+# ---------------------------
 class LoginScreen(tk.Frame):
+    """Handles user authentication with username/password"""
     def __init__(self, parent, main_window):
-        super().__init__(parent.root, bg=main_window.MAIN_BG)
+        super().__init__(parent.root, bg="black")
         
-        canvas = tk.Canvas(self, width=800, height=500, bg="white")
+        # Canvas for login UI elements
+        canvas = tk.Canvas(self, width=800, height=500, bg="black", highlightthickness=0)
         canvas.pack(expand=True)
         
-        # Create login interface
-        canvas.create_rectangle(100, 80, 700, 400, fill=main_window.SIDEBAR_BG, outline="black", width=1)
+        # Login form elements
+        canvas.create_rectangle(2, 80, 800, 400, fill="black", outline="black", width=1)
         x_center = (100 + 700) // 2
         canvas.create_line(x_center, 80, x_center, 400, fill="black", width=2)
 
         # Load and display image
         if image_path:
             image = Image.open(image_path)
-            resized_image = image.resize((295, 295))
+            resized_image = image.resize((300, 300))
             image_tk = ImageTk.PhotoImage(resized_image)
             canvas.image_tk = image_tk
-            canvas.create_image(250, 240, image=image_tk, anchor="center")
-        else:
-            messagebox.showerror("Error", "Logo image not found")
+            canvas.create_image(220, 260, image=image_tk, anchor="center")
 
         # Login elements
-        canvas.create_text(550, 150, text="Student Login", fill="black", font=("Arial", 29, "bold"))
+        canvas.create_text(550, 150, text="Student Login", fill="white", font=("Arial", 29, "bold"))
         
-        # Username
-        canvas.create_text(465, 200, text="Username:", fill="black", font=("Arial", 14))
+        # Username input
+        canvas.create_text(465, 200, text="Username:", fill="white", font=("Arial", 14))
         self.username_entry = tk.Entry(self, width=15, font=("Arial", 14))
         canvas.create_window(600, 200, window=self.username_entry)
         
-        # Password
-        canvas.create_text(465, 250, text="Password:", fill="black", font=("Arial", 14))
+        # Password input
+        canvas.create_text(465, 250, text="Password:", fill="white", font=("Arial", 14))
         self.password_entry = tk.Entry(self, width=15, show="*", font=("Arial", 14))
         canvas.create_window(600, 250, window=self.password_entry)
         
@@ -114,18 +135,18 @@ class LoginScreen(tk.Frame):
         canvas.create_window(552, 350, window=back_btn)
 
     def back_to_login(self):
-        """Close the current window and navigate back to login.py."""
-        self.master.destroy()  # Close the current window
-        # Dynamically determine the path to login.py
-        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))  # Get the directory of the current script
-        login_script = os.path.join(script_dir, "login.py")  # Construct the path to login.py
-        os.system(f"python \"{login_script}\"")  # Use the constructed path to run login.py
+        """Return to login.py script using system call"""
+        self.master.destroy()
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        login_script = os.path.join(script_dir, "login.py") 
+        os.system(f"python \"{login_script}\"") 
  
     def authenticate(self, main_window):
+        """Validate credentials against stored data"""
         username = self.username_entry.get()
         password = self.password_entry.get()
         
-        # Filter the authentication DataFrame
+        # Query authentication database
         user = authentication[
             (authentication["username"] == username) & 
             (authentication["password"] == password) & 
@@ -135,7 +156,6 @@ class LoginScreen(tk.Frame):
         if not user.empty:
             # Fetch the student data
             student_data = student_file[student_file["username"] == username]
-            print(student_data)  # Debugging: Check if student data is fetched correctly
             if not student_data.empty:
                 student_data = student_data.iloc[0]
                 main_window.user_data = {
@@ -152,19 +172,23 @@ class LoginScreen(tk.Frame):
             else:
                 messagebox.showerror("Error", "Student data not found")
         else:
-            messagebox.showerror("Error", "Invalid credentials")
+            messagebox.showerror("Error", "Incorrect Username or Password")
 
+# ---------------------------
+# Student Dashboard
+# ---------------------------
 class StudentDashboard(tk.Frame):
+    """Main interface showing profile, grades, and activities"""
     def __init__(self, parent):
-        super().__init__(parent.root, bg=parent.MAIN_BG)
+        super().__init__(parent.root, bg="#f5f5f5")
         self.parent = parent
         self.pack(fill="both", expand=True)
         self.root = parent.root
         self.root.title("Student Dashboard")
         
-        # Sidebar setup
+        # Sidebar configuration
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1e88e5", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
@@ -181,67 +205,59 @@ class StudentDashboard(tk.Frame):
         date_label.pack(side="right", padx=10, pady=5)
 
         # Header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        header = tk.Frame(self, bg="#0d47a1", height=50)
         header.pack(side="top", fill="x")
         
-        tk.Label(header, text="Student Dashboard", bg=parent.HEADER_COLOR, 
+        tk.Label(header, text="Student Dashboard", bg="#0d47a1", fg="white",
                 font=("Arial", 20, "bold")).pack(pady=10, side="left")
         
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
-        upper_section.pack(fill="x", pady=(20, 10))
+        upper_section = tk.Frame(sidebar, bg="#1e88e5")
+        upper_section.pack(fill="x", pady=20)
 
         # Add a horizontal line to divide the sections
-        divider = tk.Frame(sidebar, bg="black", height=2)
-        divider.pack(fill="x", pady=5)
+        divider = tk.Frame(sidebar, bg="#000000", height=2)
+        divider.pack(fill="x")
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1e88e5")  # Updated background color
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
         
         # Sidebar content
-        if image_path:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            self.sidebar_image = ImageTk.PhotoImage(resized_image)
-            image_label = tk.Label(upper_section, image=self.sidebar_image, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        else:
-            messagebox.showerror("Error", "Logo image not found")
+        tk.Label(upper_section, text="ABC School", bg="#1e88e5", fg="black",
+                font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
 
-        # Add buttons to the lower section
+        tk.Button(lower_section, 
+                  text="Profile", 
+                  command=lambda: self.show_content("profile"), 
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        tk.Button(lower_section, text="Grades", 
+                  command=lambda: self.show_content("grades"), 
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        tk.Button(lower_section, text="ECA", 
+                  command=lambda: self.show_content("eca"), 
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        
         add_update_button = tk.Button(
             lower_section,
             text="Update Profile",
             command=lambda: parent.switch_frame(ProfileUpdate, self.parent.user_data["username"]),
-            bg=parent.BUTTON_BG,
-            fg=parent.BUTTON_FG,
             font=("Arial", 10, "bold"),
             width=15
         )
-        add_update_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
+        add_update_button.pack(pady=(5, 5), anchor="n")
 
-
-        
         tk.Button(header, text="Log Out", command=lambda: parent.switch_frame(LoginScreen, parent), 
-        bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 12)).pack(pady=10, padx=10 ,side="right")        
+        bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 8)).pack(pady=10, padx=10 ,side="right")        
         # Main content area
         main_area = tk.Frame(self, bg=parent.MAIN_BG)
-        main_area.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Navigation buttons
-        btn_frame = tk.Frame(main_area, bg=parent.MAIN_BG)
-        btn_frame.pack(pady=10)
-        
-        tk.Button(btn_frame, text="Profile", command=lambda: self.show_content("profile"), 
-                width=15, font=("Arial", 12)).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Grades", command=lambda: self.show_content("grades"), 
-                width=15, font=("Arial", 12)).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="ECA", command=lambda: self.show_content("eca"), 
-                width=15, font=("Arial", 12)).pack(side="left", padx=5)
-        
+        main_area.pack(fill="both", expand=True)
+
         # Content display area
         self.content_area = tk.Frame(main_area, bg=parent.MAIN_BG)
-        self.content_area.pack(fill="both", expand=True)
+        self.content_area.pack(fill="both", expand=True, pady=20)
         
         # Show default content
         self.show_content("profile")
@@ -249,78 +265,104 @@ class StudentDashboard(tk.Frame):
     def show_content(self, section):
         for widget in self.content_area.winfo_children():
             widget.destroy()
-        
         if section == "profile":
             self.show_profile()
         elif section == "grades":
             self.show_grades()
         elif section == "eca":
-            self.show_eca()  # Call the refactored show_eca method
+            self.show_eca()
 
     def show_profile(self):
+        """Display student's personal information"""
+        profile_box = tk.Frame(self.content_area, bg="#e3f2fd", bd=2, relief="solid")
+        profile_box.pack(pady=20, padx=20, fill="both", expand=False)
 
-        tk.Label(self.content_area, text="Student Profile", font=("Arial", 18, "bold"),
-                bg=self.parent.MAIN_BG, fg="white").pack(pady=10, side="top")
+        tk.Label(profile_box, text="Student Profile", font=("Arial", 18, "bold"),
+                bg="#e3f2fd", fg="#212121").pack(pady=10, side="top")
+
         fields = ["ID", "Name", "DOB", "Address", "Grade", "Section"]
         for i, field in enumerate(fields):
-            row = tk.Frame(self.content_area, bg=self.parent.MAIN_BG)
-            row.pack(anchor="w", pady=5)
-            tk.Label(row, text=f"{field}:", width=15, anchor="w", 
-                    bg=self.parent.MAIN_BG, fg="white").pack(side="left")
-            tk.Label(row, text=self.parent.user_data.get(field, ""), 
-                    bg=self.parent.MAIN_BG, fg="white").pack(side="left")
+            row = tk.Frame(profile_box, bg="white")
+            row.pack(anchor="w", pady=2, padx=10)
+            tk.Label(row, text=f"{field}:", width=9, anchor="w",
+                    bg="#e3f2fd", fg="#212121", font=("Arial", 14, "bold")).pack(side="left")
+            tk.Label(row, text=self.parent.user_data.get(field, ""),
+                    bg="#e3f2fd", fg="#212121", font=("Arial", 14)).pack(side="left")
 
-            separator = tk.Frame(self.content_area, height=1, bg="white")
-            separator.pack(fill="x", pady=5)
+            # Optional: Add a separator between rows
+            separator = tk.Frame(profile_box, height=1, bg="black")
+            separator.pack(fill="x", pady=2)
 
     def show_grades(self):
-        tk.Label(self.content_area, text="Student Grades", font=("Arial", 18, "bold"),
-                bg=self.parent.MAIN_BG, fg="white").pack(pady=10, side="top")
+        """Display academic performance data"""
+        grades_box = tk.Frame(self.content_area, bg="#e3f2fd", bd=2, relief="solid")
+        grades_box.pack(pady=20, padx=20, fill="both", expand=False)
+
+        tk.Label(grades_box, text="Student Grades", font=("Arial", 18, "bold"),
+                bg="#e3f2fd", fg="#212121").pack(pady=10, side="top")
+
         grades = read_gradeData[read_gradeData["username"] == self.parent.user_data["username"]]
         if not grades.empty:
             subjects = ["english", "nepali", "math", "science", "computer"]
             for i, subject in enumerate(subjects):
-                row = tk.Frame(self.content_area, bg=self.parent.MAIN_BG)
-                row.pack(anchor="w", pady=5)
-                tk.Label(row, text=f"{subject.capitalize()}:", width=15, anchor="w", 
-                        bg=self.parent.MAIN_BG, fg="white").pack(side="left")
+                row = tk.Frame(grades_box, bg="#FDFFE2")
+                row.pack(anchor="w", pady=2, padx=10)
+                tk.Label(row, text=f"{subject.capitalize()}:", width=9, anchor="w",
+                        bg="#e3f2fd", fg="#212121", font=("Arial", 14, "bold")).pack(side="left")
                 tk.Label(row, text=grades.iloc[0].get(subject, "N/A"),  # Fallback to "N/A"
-                        bg=self.parent.MAIN_BG, fg="white").pack(side="left")
+                        bg="#e3f2fd", fg="#212121", font=("Arial", 14)).pack(side="left")
+
+                # Optional: Add a separator between rows
+                separator = tk.Frame(grades_box, height=1, bg="black")
+                separator.pack(fill="x", pady=2)
         else:
-            tk.Label(self.content_area, text="No grades available", 
-                    bg=self.parent.MAIN_BG, fg="white").pack()
+            tk.Label(grades_box, text="No grades available",
+                    bg="#83B4FF", fg="black", font=("Arial", 14)).pack(pady=10)
 
 
     def show_eca(self):
-        # Add a header for the ECA section
-        tk.Label(self.content_area, text="Extracurricular Activities",
-                 font=("Arial", 18, "bold"), bg=self.parent.MAIN_BG, fg="white").pack(pady=10)
+        """Show extracurricular activity enrollment status"""
+        eca_box = tk.Frame(self.content_area, bg="#e3f2fd", bd=2, relief="solid")
+        eca_box.pack(pady=20, padx=20, fill="both", expand=False)
+
+        # Header for the ECA section
+        tk.Label(eca_box, text="Extracurricular Activities", font=("Arial", 18, "bold"),
+                bg="#e3f2fd", fg="#212121").pack(pady=10, side="top")
 
         try:
-            # Filter the ECA data for the logged-in student
+            # Extract student ECA data
             student_eca = eca_data[eca_data["username"] == self.parent.user_data["username"]]
 
             if not student_eca.empty:
-                student_eca = student_eca.iloc[0]  # Get the first (and only) row for the student
+                student_eca = student_eca.iloc[0]  # Get the first matching record
+                self.eca_vars = []  # List to keep references to IntVar
 
-                # Iterate through activities, skipping the "username" column
-                for activity in student_eca.index[1:]:  # Skip the "username" column
-                    is_enrolled = student_eca[activity] == 1  # Check if the student is enrolled
-                    var = tk.IntVar(value=1 if is_enrolled else 0)  # Initialize IntVar with the correct value
+                for activity in student_eca.index[1:]:  # Skip the 'username' column
+                    is_enrolled = student_eca[activity]
+                    # Ensure the value is an integer (1/0)
+                    var = tk.IntVar(value=int(is_enrolled))
+                    self.eca_vars.append(var)  # Keep a reference to prevent garbage collection
 
-                    # Display activity as a checkbox (disabled to prevent modification)
-                    tk.Checkbutton(self.content_area, text=activity.capitalize(),
-                                   bg=self.parent.MAIN_BG, fg="white", selectcolor="black",
-                                   state="disabled", variable=var).pack(anchor="w", padx=10, pady=5)
+                    # Create the checkbox with the variable
+                    cb = tk.Checkbutton(
+                        eca_box,
+                        text=activity.capitalize(),
+                        bg="#e3f2fd",
+                        fg="#212121",
+                        selectcolor="black",  # Color of the tick when selected
+                        state="disabled",
+                        font=("Arial", 14, "bold"),
+                        variable=var
+                    )
+                    cb.pack(anchor="w", pady=2, padx=9)
             else:
-                # If no ECA data is found for the student
-                tk.Label(self.content_area, text="No extracurricular activities found",
-                         bg=self.parent.MAIN_BG, fg="white").pack(pady=10)
+                tk.Label(eca_box, text="No extracurricular activities found",
+                        bg="#e3f2fd", fg="#212121", font=("Arial", 16)).pack(pady=10)
         except FileNotFoundError:
-            # Handle the case where the ECA file is missing or empty
-            tk.Label(self.content_area, text="ECA data file not found",
-                     bg=self.parent.MAIN_BG, fg="red").pack(pady=10)
-            
+            tk.Label(eca_box, text="ECA data file not found",
+                    bg="#e3f2fd", fg="#212121", font=("Arial", 12)).pack(pady=10)
+
+
 class ProfileUpdate(tk.Frame):
     def __init__(self, parent, username):
         super().__init__(parent.root, bg=parent.MAIN_BG)
@@ -330,9 +372,9 @@ class ProfileUpdate(tk.Frame):
         self.root = parent.root
         self.root.title("Profile Update")
 
-        # Create a sidebar with a fixed width
+        # Sidebar setup
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1DCD9F", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
@@ -348,41 +390,27 @@ class ProfileUpdate(tk.Frame):
         date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
         date_label.pack(side="right", padx=10, pady=5)
 
-        # Create a header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        # Header
+        header = tk.Frame(self, bg="#169976", height=50)
         header.pack(side="top", fill="x")
-
-        # Header label
-        header_label = tk.Label(header, text="Update Personal Information", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
-        header_label.pack(pady=10, side="left")
+        tk.Label(header, text="Update Personal Information", bg="#169976", fg="white", font=("Arial", 20, "bold")).pack(pady=10, side="left")
 
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        upper_section = tk.Frame(sidebar, bg="#1DCD9F")
         upper_section.pack(fill="x", pady=(20, 10))
 
-        # Add a horizontal line to divide the sections
         divider = tk.Frame(sidebar, bg="black", height=2)
         divider.pack(fill="x", pady=5)
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1DCD9F")
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
 
-        # Load and display the image in the upper section
-        try:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            image_tk = ImageTk.PhotoImage(resized_image)
-            self.sidebar_image = image_tk
-            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"Image file not found: {image_path}")
+        tk.Label(upper_section, text="ABC School", bg="#1DCD9F", fg="black", font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
 
-        # Add buttons to the lower section
         back_button = tk.Button(
             lower_section,
             text="Back",
-            command=lambda: parent.switch_frame(StudentDashboard),  # Fixed Back button
+            command=lambda: parent.switch_frame(StudentDashboard),
             bg=parent.BUTTON_BG,
             fg=parent.BUTTON_FG,
             font=("Arial", 10, "bold"),
@@ -390,28 +418,34 @@ class ProfileUpdate(tk.Frame):
         )
         back_button.pack(pady=(5, 5), anchor="n")
 
-        # Display a header
-        tk.Label(self, text=f"Update Profile for {self.username}", font=("Arial", 16, "bold"), bg=parent.MAIN_BG, fg="white").pack(pady=20)
+        # Create a frame to act as the box for the main content
+        profile_update_box = tk.Frame(self, bg="#5A72A0", bd=2, relief="solid")
+        profile_update_box.pack(pady=20, padx=20, fill="both", expand=False)
+
+        # Display a header inside the box
+        tk.Label(profile_update_box, text=f"Update Profile of {self.username}", font=("Arial", 16, "bold"),
+                 bg="#5A72A0", fg="white").pack(pady=20)
 
         # Fields to update
         fields = ["ID", "Name", "DOB", "Address", "Grade", "Section", "username", "password"]
         self.entries = {}
 
         for field in fields:
-            row = tk.Frame(self, bg=parent.MAIN_BG)
-            row.pack(anchor="w", pady=5, padx=20)
-            tk.Label(row, text=f"{field}:", width=15, anchor="w", bg=parent.MAIN_BG, fg="white").pack(side="left")
+            row = tk.Frame(profile_update_box, bg="#1A2130")
+            row.pack(anchor="w", pady=2, padx=10)
+            tk.Label(row, text=f"{field}:", width=9, anchor="w", bg="#5A72A0", fg="black", font=("Arial", 14, "bold")).pack(side="left")
 
-     # Allow all fields, including ID, to be editable
-            entry = tk.Entry(row, font=("Arial", 12))
+            entry = tk.Entry(row, font=("Arial", 14))
             entry.pack(side="left", fill="x", expand=True)
             self.entries[field] = entry
 
             # Pre-fill the entry with existing data
             entry.insert(0, self.parent.user_data.get(field, ""))
 
-        # Save button
-        tk.Button(self, text="Save", command=self.save_profile, font=("Arial", 12), bg=parent.BUTTON_BG, fg=parent.BUTTON_FG).pack(pady=20)
+
+        # Save button inside the box
+        tk.Button(profile_update_box, text="Save", command=self.save_profile, font=("Arial", 12),
+                  bg=parent.BUTTON_BG, fg=parent.BUTTON_FG).pack(pady=5, side="right", padx=5)
 
     def save_profile(self):
         # Collect user data from the entries
