@@ -1,3 +1,7 @@
 ID,Name,DOB,Address,Grade,Section,username,password
-10001,Sagar Nepali,2000-01-01,123 Main St,10,A,sagar,sagar123
-10002,John Doe,2001-02-02,456 Elm St,11,B,johndoe,johndoe123
+103,student,2000-01-01,123 Main St,A,1,user1,password1
+104,Student2,2001-02-02,456 Elm St,B,2,user2,password2  
+fwef,fw,fwfwf,wefwef,fwfw,fwerfw,,
+k,k,fwfwf,wefwef,fwfw,fwerfw,,
+fsd,fsdfsdfsdf,fsdf,sdfsf,sfsfsd,fsdfsdf,,
+ffdd,fsdfsdfsdf,fsdf,sdfsf,sfsfsd,fsdfsdf,,

@@ -8,7 +8,11 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import os
 import sys
+from tkhtmlview import HTMLLabel
+import plotly.express as px
+import plotly.io as pio
 import seaborn as sns
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 PASSWORD_FILE = "data/password.csv"
 GRADE_DATA = "data/grade.csv"
@@ -31,6 +35,7 @@ class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Log In")
+
         self.icon = tk.PhotoImage(file=image_path)  # Ensure the image is in the same directory or provide a full path
         self.root.iconphoto(True, self.icon)
 
@@ -146,9 +151,9 @@ class AdminDashboard(tk.Frame):  # Inherit directly from tk.Frame
         self.root = parent.root
         self.root.title("Admin Dashboard")
 
-        # Create a sidebar with a fixed width
+        # Sidebar configuration
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1e88e5", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
@@ -164,82 +169,60 @@ class AdminDashboard(tk.Frame):  # Inherit directly from tk.Frame
         date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
         date_label.pack(side="right", padx=10, pady=5)
 
-        # Create a header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        # Header
+        header = tk.Frame(self, bg="#0d47a1", height=50)
         header.pack(side="top", fill="x")
-
-        # Header label
-        header_label = tk.Label(header, text="Admin Dashboard", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
-        header_label.pack(pady=10, side="left")
-
-        # Log Out button
-        header_logout = tk.Button(header, text="Log Out", command=lambda: parent.switch_frame(LoginScreen, parent), font=("Arial", 13, "bold"))
-        header_logout.pack(pady=10, padx=10, side="right")
-
-        #text
-        welcome_label = tk.Label(self, text=f"Welcome, {username}!", font=("Arial", 18, "bold"), bg=parent.MAIN_BG, fg="black")
-        welcome_label.pack(pady=10)
-        # how to use this software details
-        details_label = tk.Label(self, text="This software is designed for managing student and admin accounts.", font=("Arial", 14), bg=parent.MAIN_BG, fg="black")
-        details_label.pack(pady=10)
-
+        
+        tk.Label(header, text="Admin Dashboard", bg="#0d47a1", fg="white",
+                font=("Arial", 20, "bold")).pack(pady=10, side="left")
+        
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
-        upper_section.pack(fill="x", pady=(20, 10))
+        upper_section = tk.Frame(sidebar, bg="#1e88e5")
+        upper_section.pack(fill="x", pady=20)
 
         # Add a horizontal line to divide the sections
-        divider = tk.Frame(sidebar, bg="black", height=2)
-        divider.pack(fill="x", pady=5)
+        divider = tk.Frame(sidebar, bg="#000000", height=2)
+        divider.pack(fill="x")
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1e88e5")  # Updated background color
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
+        
+        # Sidebar content
+        tk.Label(upper_section, text="ABC School", bg="#1e88e5", fg="black",
+                font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
 
-        # Load and display the image in the upper section
-        try:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            image_tk = ImageTk.PhotoImage(resized_image)
-            self.sidebar_image = image_tk
-            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"Image file not found: {image_path}")
+        tk.Button(lower_section, 
+                  text="Add User", 
+                  command=lambda: parent.switch_frame(AddUser, self.username), 
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        tk.Button(lower_section, text="Delete User", 
+                  command=lambda: parent.switch_frame(DeleteUser, self.username), 
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        tk.Button(lower_section, text="Student Record", 
+                  command=lambda: parent.switch_frame(StudentRecord, self.username),
+                  width=15, 
+                  font=("Arial", 10, "bold")).pack(pady=(5, 5), anchor="n")
+        
 
-        # Add buttons to the lower section
+        tk.Button(header, text="Log Out", command=lambda: parent.switch_frame(LoginScreen, parent), 
+        bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 8)).pack(pady=10, padx=10 ,side="right")        
+        # Main content area
+        main_area = tk.Frame(self, bg=parent.MAIN_BG)
+        main_area.pack(fill="both", expand=True)
 
-        add_user_button = tk.Button(
-            lower_section,
-            text="Add User",
-            command=lambda: parent.switch_frame(AddUser, self.username),  # Switch to AddUser frame
-            bg=parent.BUTTON_BG,
-            fg=parent.BUTTON_FG,
-            font=("Arial", 10, "bold"),
-            width=15
-        )
-        add_user_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
+                # Default content
+        tk.Label(main_area, text="This is the Admin Dashboard", font=("Arial", 18, "bold"), bg=parent.MAIN_BG, fg=parent.HEADER_COLOR).pack(pady=10)
+        tk.Label(main_area, text="Admin can Add and Delete (Admin and Student),\nView Student progress", font=("Arial", 18, "bold"), bg=parent.MAIN_BG, fg=parent.HEADER_COLOR).pack(pady=10)
+
+        tk.Label(main_area, text="Please select an option from the sidebar.", font=("Arial", 14), bg=parent.MAIN_BG, fg=parent.HEADER_COLOR).pack(pady=5)
+
+        # Content display area
+        self.content_area = tk.Frame(main_area, bg=parent.MAIN_BG)
+        self.content_area.pack(fill="both", expand=True, pady=20)
 
 
-        delete_user_button = tk.Button(
-            lower_section,
-            text="Delete User",
-            command=lambda: parent.switch_frame(DeleteUser, self.username),  # Pass only the required arguments
-            bg=parent.BUTTON_BG,
-            fg=parent.BUTTON_FG,
-            font=("Arial", 10, "bold"),
-            width=15,
-        )
-        delete_user_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
-
-        studentRecord_button = tk.Button(
-            lower_section,
-            text="Student Record",
-            command=lambda: parent.switch_frame(StudentRecord, self.username),  # Pass only the required arguments
-            bg=parent.BUTTON_BG,
-            fg=parent.BUTTON_FG,
-            font=("Arial", 10, "bold"),
-            width=15,
-        )
-        studentRecord_button.pack(pady=(5, 5), anchor="n")  # Adjusted padding and anchored to the top
 
 class AddUser(tk.Frame):
     def __init__(self, parent, username):
@@ -250,14 +233,13 @@ class AddUser(tk.Frame):
         self.root = parent.root
         self.root.title("Add User")
 
-        # Create a sidebar with a fixed width
+        # Sidebar configuration
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1e88e5", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
-        # Add a right border to the sidebar
-        right_border = tk.Frame(sidebar, bg="black", width=2)
+        right_border = tk.Frame(sidebar, bg="black", width=2)  # Black border with 2px width
         right_border.pack(side="right", fill="y")
 
         # Create a date header
@@ -268,35 +250,28 @@ class AddUser(tk.Frame):
         date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
         date_label.pack(side="right", padx=10, pady=5)
 
-        # Create a header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        # Header
+        header = tk.Frame(self, bg="#0d47a1", height=50)
         header.pack(side="top", fill="x")
-
-        # Header label
-        header_label = tk.Label(header, text="Add User", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
-        header_label.pack(pady=10, side="left")
+        
+        tk.Label(header, text="Add User", bg="#0d47a1", fg="white",
+                font=("Arial", 20, "bold")).pack(pady=10, side="left")
 
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
-        upper_section.pack(fill="x", pady=(20, 10))
+        upper_section = tk.Frame(sidebar, bg="#1e88e5")
+        upper_section.pack(fill="x", pady=20)
 
         # Add a horizontal line to divide the sections
-        divider = tk.Frame(sidebar, bg="black", height=2)
-        divider.pack(fill="x", pady=5)
+        divider = tk.Frame(sidebar, bg="#000000", height=2)
+        divider.pack(fill="x")
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1e88e5")  # Updated background color
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
-
         # Load and display the image in the upper section
-        try:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            image_tk = ImageTk.PhotoImage(resized_image)
-            self.sidebar_image = image_tk
-            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"Image file not found: {image_path}")
+
+        # Sidebar content
+        tk.Label(upper_section, text="ABC School", bg="#1e88e5", fg="black",
+                font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
 
         # Sidebar content
         add_user_admin = tk.Button(
@@ -368,9 +343,9 @@ class AddUser(tk.Frame):
                 self.main_area,
                 text=field,
                 bg=self.parent.MAIN_BG,
-                fg="black"
+                fg="black", font=("Arial", 12)
             ).grid(row=1 + i, column=0, padx=(20, 10), pady=5, sticky="w")  # Aligned to the left with padx
-            entry = tk.Entry(self.main_area, bg=self.parent.ENTRY_BG, fg=self.parent.ENTRY_FG)
+            entry = tk.Entry(self.main_area, bg=self.parent.ENTRY_BG, fg=self.parent.ENTRY_FG, font=("Arial", 12))
             entry.grid(row=1 + i, column=1, padx=(10, 20), pady=5, sticky="w")  # Aligned to the left with padx
             self.entries[field] = entry
 
@@ -380,6 +355,7 @@ class AddUser(tk.Frame):
             text="Save",
             command=lambda: self.save_user(role),
             bg="#D9D9D9",
+            font=("Arial", 9, "bold"),
             fg=self.parent.BUTTON_FG
         ).grid(row=len(fields) + 1, column=0, columnspan=2, pady=20, padx=20, sticky="w")  # Aligned to the left
 
@@ -397,7 +373,7 @@ class AddUser(tk.Frame):
         file_paths = {"admin": ADMIN_FILE, "student": STUDENT_FILE}
         role_fields = {
             "admin": ["ID", "Name", "Username", "Password"],
-            "student": ["ID", "Name", "DOB", "Address", "Grade", "Section", "Username", "Password"]
+            "student": ["ID", "Name", "DOB", "Address", "Grade", "Section", "username", "password"]
         }
 
         file_path = file_paths[role]
@@ -412,12 +388,12 @@ class AddUser(tk.Frame):
             existing_data.to_csv(file_path, index=False)
 
         # Check for duplicates in the role-specific file
-        if user_data["ID"] in existing_data["ID"].astype(str).values:
-            messagebox.showerror("Error", "Duplicate ID found. Please use a unique ID.")
-            return
-        if user_data["Username"] in existing_data["Username"].values:
-            messagebox.showerror("Error", "Duplicate Username found. Please use a unique Username.")
-            return
+        # if user_data["ID"] in existing_data["ID"].astype(str).values:
+        #     messagebox.showerror("Error", "Duplicate ID found. Please use a unique ID.")
+        #     return
+        # if user_data["Username"] in existing_data["Username"].values:
+        #     messagebox.showerror("Error", "Duplicate Username found. Please use a unique Username.")
+        #     return
 
         # Append the new user data to the role-specific file
         new_user_df = pd.DataFrame([{field: user_data.get(field, "") for field in fields}])
@@ -445,8 +421,6 @@ class AddUser(tk.Frame):
         if user_data["Username"] in password_data["username"].values:
             messagebox.showerror("Error", "Duplicate Username found in password file. Please use a unique Username.")
             return
-        
-
 
         try:
             # Load the grade.csv file
@@ -503,14 +477,14 @@ class DeleteUser(tk.Frame):
         self.root = parent.root
         self.root.title("Delete User")
 
-        # Create a sidebar with a fixed width
+       # Sidebar configuration
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1e88e5", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
         # Add a right border to the sidebar
-        right_border = tk.Frame(sidebar, bg="black", width=2)
+        right_border = tk.Frame(sidebar, bg="black", width=2)  # Black border with 2px width
         right_border.pack(side="right", fill="y")
 
         # Create a date header
@@ -521,40 +495,32 @@ class DeleteUser(tk.Frame):
         date_label = tk.Label(date_header, text=current_date, font=("Arial", 14))
         date_label.pack(side="right", padx=10, pady=5)
 
+        # Header
+        header = tk.Frame(self, bg="#0d47a1", height=50)
+        header.pack(side="top", fill="x")
+
+        tk.Label(header, text="Delete User", bg="#0d47a1", fg="white",
+        font=("Arial", 20, "bold")).pack(pady=10, side="left")
+
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        upper_section = tk.Frame(sidebar, bg="#1e88e5")
         upper_section.pack(fill="x", pady=(20, 10))
 
         # Add a horizontal line to divide the sections
         divider = tk.Frame(sidebar, bg="black", height=2)
         divider.pack(fill="x", pady=5)
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1e88e5")
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
 
-        # Load and display the image in the upper section
-        try:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            image_tk = ImageTk.PhotoImage(resized_image)
-            self.sidebar_image = image_tk
-            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"Image file not found: {image_path}")
+        # Sidebar content
+        tk.Label(upper_section, text="ABC School", bg="#1e88e5", fg="black",
+                font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
 
         # Add buttons to the lower section
         back_button = tk.Button(lower_section, text="Back", command=lambda: parent.switch_frame(AdminDashboard, username),
                                 bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 10, "bold"), width=15)
         back_button.pack(pady=(5, 5), anchor="n")
-
-        # Create a header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
-        header.pack(side="top", fill="x")
-
-        # Header label
-        header_label = tk.Label(header, text="Delete User", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
-        header_label.pack(pady=10, side="left")
 
         # Form frame for delete user functionality
         form_frame = tk.Frame(self, bg=parent.MAIN_BG)
@@ -572,8 +538,8 @@ class DeleteUser(tk.Frame):
             command=self.delete_user,
             bg=parent.BUTTON_BG,
             fg="black",
-            font=("Arial", 14, "bold"),
-            border= 6
+            font=("Arial", 10, "bold"),
+            border=3
         )
         delete_button.grid(row=1, column=0, columnspan=2, pady=10)
 
@@ -605,14 +571,14 @@ class StudentRecord(tk.Frame):
         self.root = parent.root
         self.root.title("Student Record")
 
-        # Create a sidebar with a fixed width
+        # Sidebar configuration
         sidebar_width = 200
-        sidebar = tk.Frame(self, bg=parent.SIDEBAR_BG, width=sidebar_width)
+        sidebar = tk.Frame(self, bg="#1e88e5", width=sidebar_width)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
         # Add a right border to the sidebar
-        right_border = tk.Frame(sidebar, bg="black", width=2)
+        right_border = tk.Frame(sidebar, bg="black", width=2)  # Black border with 2px width
         right_border.pack(side="right", fill="y")
 
         # Create a date header
@@ -624,63 +590,68 @@ class StudentRecord(tk.Frame):
         date_label.pack(side="right", padx=10, pady=5)
 
         # Divide the sidebar into two sections: upper and lower
-        upper_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
-        upper_section.pack(fill="x", pady=(20, 10))
+        upper_section = tk.Frame(sidebar, bg="#1e88e5")
+        upper_section.pack(fill="x", pady=20)
 
         # Add a horizontal line to divide the sections
-        divider = tk.Frame(sidebar, bg="black", height=2)
-        divider.pack(fill="x", pady=5)
+        divider = tk.Frame(sidebar, bg="#000000", height=2)
+        divider.pack(fill="x")
 
-        lower_section = tk.Frame(sidebar, bg=parent.SIDEBAR_BG)
+        lower_section = tk.Frame(sidebar, bg="#1e88e5")  # Updated background color
         lower_section.pack(fill="x", pady=(10, 20), expand=True)
 
-        # Load and display the image in the upper section
-        try:
-            image = Image.open(image_path)
-            resized_image = image.resize((120, 120))
-            image_tk = ImageTk.PhotoImage(resized_image)
-            self.sidebar_image = image_tk
-            image_label = tk.Label(upper_section, image=image_tk, bg=parent.SIDEBAR_BG)
-            image_label.pack(pady=10)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"Image file not found: {image_path}")
-
-        # Add buttons to the lower section
-        back_button = tk.Button(lower_section, text="Back", command=lambda: parent.switch_frame(AdminDashboard, username),
-                                bg=parent.BUTTON_BG, fg=parent.BUTTON_FG, font=("Arial", 10, "bold"), width=15)
-        back_button.pack(pady=(5, 5), anchor="n")
-
-        # Create a header
-        header = tk.Frame(self, bg=parent.HEADER_COLOR, height=50)
+        # Sidebar content
+        tk.Label(upper_section, text="ABC School", bg="#1e88e5", fg="black",
+                font=("Arial", 22, "bold")).pack(pady=15, anchor="n")
+        
+        # Header
+        header = tk.Frame(self, bg="#0d47a1", height=50)
         header.pack(side="top", fill="x")
-
-        # Header label
-        header_label = tk.Label(header, text="Student Record", bg=parent.HEADER_COLOR, font=("Arial", 20, "bold"))
-        header_label.pack(pady=10, side="left")
+        
+        tk.Label(header, text="Student Record", bg="#0d47a1", fg="white",
+                font=("Arial", 20, "bold")).pack(pady=10, side="left")
+        
+        back_btn = tk.Button(
+            lower_section,
+            text="Back",
+            command=lambda: parent.switch_frame(AdminDashboard, self.username),  # Pass only the required arguments
+            bg=parent.BUTTON_BG,
+            fg=parent.BUTTON_FG,
+            font=("Arial", 10, "bold"),
+            width=15,
+        )
+        back_btn.pack(pady=(5, 5), anchor="n")
 
         # Create a frame for the plot
         plot_frame = tk.Frame(self, bg=parent.MAIN_BG)
         plot_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Create a Matplotlib figure
+       # Create a Matplotlib figure
         figure = Figure(figsize=(8, 6), dpi=100)
         ax = figure.add_subplot(111)
 
-        # Set 'username' as index
-        read_gradeData.set_index('username', inplace=True)
+        # Use a local copy to avoid modifying the global DataFrame
+        grade_data_local = pd.read_csv(GRADE_DATA)
 
-        # Plot heatmap using Seaborn
-        sns.heatmap(read_gradeData, annot=True, fmt="d", cmap="YlGnBu", linewidths=0.5, ax=ax)
+        if 'username' in grade_data_local.columns:
+            # Prepare data for heatmap
+            heatmap_data = grade_data_local.set_index('username').replace("", float("nan")).astype(float)
+            sns.heatmap(heatmap_data, annot=True, fmt=".0f", cmap="YlGnBu", linewidths=0.5, ax=ax)
+            ax.set_title("Student Marks Heatmap")
+            ax.set_xlabel("Subject")
+            ax.set_ylabel("Username")
 
-        # Customize the chart
-        ax.set_title("Student Marks Heatmap", fontsize=16)
-        ax.set_xlabel("Subjects")
-        ax.set_ylabel("Students")
-
-        # Embed the plot into the tkinter frame
-        canvas = FigureCanvasTkAgg(figure, plot_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True)
+            # Embed the Matplotlib figure in Tkinter
+            canvas = FigureCanvasTkAgg(figure, master=plot_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill="both", expand=True)
+        else:
+            tk.Label(
+                plot_frame,
+                text="No 'username' column in grade data.",
+                font=("Arial", 12),
+                bg=parent.MAIN_BG
+            ).pack(pady=20)
 
 
 def start_admin_gui(root):
